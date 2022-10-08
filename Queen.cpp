@@ -1,23 +1,24 @@
 #include "Queen.h"
+#include "Rules.h"
 
 Piece::Type Queen::getPieceType() const
 {
 	return Piece::Type::Q;
 }
 
-bool Queen::areSquaresValid(const Coords& c, const Piece* board[8][8]) const
+bool Queen::areSquaresValid(const Coords& c, const std::unique_ptr<Piece> board[8][8]) const
 {
 	if (c.startY == c.exitY)
 	{
-		return areIntermediateXSquaresEmpty(c, board);
+		return Rules::areIntermediateXSquaresEmpty(c, board);
 	}
 	else if (c.startX == c.exitX)
 	{
-		return areIntermediateYSquaresEmpty(c, board);
+		return Rules::areIntermediateYSquaresEmpty(c, board);
 	}
-	else if (isStartExitOnSameDiagonal(c))
+	else if (Rules::isStartExitOnSameDiagonal(c))
 	{
-		return areIntermediateDiagonalSquaresEmpty(c, board);
+		return Rules::areIntermediateDiagonalSquaresEmpty(c, board);
 	}
 	return false;
 }

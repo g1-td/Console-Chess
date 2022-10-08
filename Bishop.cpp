@@ -1,14 +1,16 @@
 #include "Bishop.h"
+#include "Rules.h"
 
 Piece::Type Bishop::getPieceType() const
 {
 	return Piece::Type::B;
 }
 
-bool Bishop::areSquaresValid(const Coords& c, const Piece* board[8][8]) const
+bool Bishop::areSquaresValid(const Coords& c, const std::unique_ptr<Piece> board[8][8]) const
 {
-	if (isStartExitOnSameDiagonal(c))
+	if (Rules::isStartExitOnSameDiagonal(c))
 	{
-		return areIntermediateDiagonalSquaresEmpty(c, board);
+		return Rules::areIntermediateDiagonalSquaresEmpty(c, board);
 	}
+	return false;
 }

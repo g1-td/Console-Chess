@@ -3,7 +3,7 @@
 
 Piece::Type Bishop::getPieceType() const
 {
-	return Piece::Type::B;
+	return Piece::Type::BISHOP;
 }
 
 bool Bishop::areSquaresValid(const Coords& c, const std::unique_ptr<Piece> board[8][8]) const

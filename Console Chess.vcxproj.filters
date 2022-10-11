@@ -75,7 +75,10 @@
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="Rules.h">
-      <Filter>Header Files\Pieces</Filter>
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="NotationToCoords.h">
+      <Filter>Header Files</Filter>
     </ClInclude>
   </ItemGroup>
 </Project>

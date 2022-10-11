@@ -1,13 +1,11 @@
 #include <memory>
 #include "Coords.h"
 #include "Piece.h"
+#pragma once
 
 namespace Rules
 {
 	static int getExitToStartDirection(const int start, const int exit) { return start > exit ? 1 : -1; };
-	static bool isSquareType(Piece::Type pieceType, int y, int x, const std::unique_ptr<Piece> board[8][8]) { return board[y][x]->getPieceType() == pieceType; };
-	static bool squareNotEmpty(const int y, const int x, const std::unique_ptr<Piece> board[8][8]) { return board[y][x] != 0; };
-
 	static bool areIntermediateXSquaresEmpty(const Coords& c, const std::unique_ptr<Piece> board[8][8])
 	{
 		int exitToStartDirection = getExitToStartDirection(c.startX, c.exitX);
@@ -19,7 +17,7 @@ namespace Rules
 			int y = c.startY;
 			int x = intermediateX;
 
-			if (squareNotEmpty(y, x, board))
+			if (board[y][x]->isSquareNotEmpty())
 			{
 				return false;
 			}
@@ -38,7 +36,7 @@ namespace Rules
 			int y = intermediateY;
 			int x = c.exitX;
 
-			if (squareNotEmpty(y, x, board))
+			if (board[y][x]->isSquareNotEmpty())
 			{
 				return false;
 			}
@@ -56,7 +54,7 @@ namespace Rules
 
 		for (int i = intermediateY; i != c.startY; i += exitToStartYDirection)
 		{
-			if (squareNotEmpty(intermediateY, intermediateX, board))
+			if (board[intermediateY][intermediateX]->isSquareNotEmpty())
 			{
 				return false;
 			}

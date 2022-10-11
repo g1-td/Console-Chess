@@ -2,7 +2,7 @@
 
 Piece::Type Knight::getPieceType() const
 {
-	return Piece::Type::N;
+	return Piece::Type::KNIGHT;
 }
 
 bool Knight::areSquaresValid(const Coords& c, const std::unique_ptr<Piece> board[8][8]) const

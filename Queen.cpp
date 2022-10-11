@@ -3,7 +3,7 @@
 
 Piece::Type Queen::getPieceType() const
 {
-	return Piece::Type::Q;
+	return Piece::Type::QUEEN;
 }
 
 bool Queen::areSquaresValid(const Coords& c, const std::unique_ptr<Piece> board[8][8]) const

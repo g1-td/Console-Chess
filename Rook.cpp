@@ -3,7 +3,7 @@
 
 Piece::Type Rook::getPieceType() const
 {
-	return Piece::Type::R;
+	return Piece::Type::ROOK;
 }
 
 bool Rook::areSquaresValid(const Coords& c, const std::unique_ptr<Piece> board[8][8]) const

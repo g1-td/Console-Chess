@@ -44,7 +44,7 @@ void ChessGame::draw() const
 				int y = sideCoordinatesNumber;
 				int x = xDrawingPosition;
 
-				if (Rules::squareNotEmpty(y, x, board))
+				if (board[y][x]->isSquareNotEmpty())
 				{
 					result = (char) board[y][x]->getPieceType();
 

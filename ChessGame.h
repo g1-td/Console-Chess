@@ -1,7 +1,8 @@
-#pragma once
 #include <iostream>
 #include <memory>
 #include "Piece.h"
+#include "NotationToCoords.h"
+#pragma once
 class ChessGame
 {
 	std::unique_ptr<Piece> board[8][8];

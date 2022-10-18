@@ -1,9 +1,9 @@
 #include "Rook.h"
 #include "Rules.h"
 
-Piece::Type Rook::getPieceType() const
+Rook::Type Rook::getPieceType() const
 {
-	return Piece::Type::ROOK;
+	return Type::ROOK;
 }
 
 bool Rook::areSquaresValid(const Coords& c, const std::unique_ptr<Piece> board[8][8]) const

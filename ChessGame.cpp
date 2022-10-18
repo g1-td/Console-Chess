@@ -1,8 +1,41 @@
 #include "ChessGame.h"
 #include "Rules.h"
 
+
+void ChessGame::setupDefaultGame()
+{
+	board[0][0] = std::make_unique<Rook>(Piece::Color::WHITE);
+	board[0][1] = std::make_unique<Knight>(Piece::Color::WHITE);
+	board[0][2] = std::make_unique<Bishop>(Piece::Color::WHITE);
+	board[0][3] = std::make_unique<Queen>(Piece::Color::WHITE);
+	board[0][4] = std::make_unique<King>(Piece::Color::WHITE);
+	board[0][5] = std::make_unique<Bishop>(Piece::Color::WHITE);
+	board[0][6] = std::make_unique<Knight>(Piece::Color::WHITE);
+	board[0][7] = std::make_unique<Rook>(Piece::Color::WHITE);
+	for (int i = 0; i < 8; i++)
+	{
+		board[1][i] = std::make_unique<Pawn>(Piece::Color::WHITE);
+	}
+
+	board[7][0] = std::make_unique<Rook>(Piece::Color::BLACK);
+	board[7][1] = std::make_unique<Knight>(Piece::Color::BLACK);
+	board[7][2] = std::make_unique<Bishop>(Piece::Color::BLACK);
+	board[7][3] = std::make_unique<Queen>(Piece::Color::BLACK);
+	board[7][4] = std::make_unique<King>(Piece::Color::BLACK);
+	board[7][5] = std::make_unique<Bishop>(Piece::Color::BLACK);
+	board[7][6] = std::make_unique<Knight>(Piece::Color::BLACK);
+	board[7][7] = std::make_unique<Rook>(Piece::Color::BLACK);
+	for (int i = 0; i < 8; i++)
+	{
+		board[6][i] = std::make_unique<Pawn>(Piece::Color::BLACK);
+	}
+
+	playerTurn = Piece::Color::WHITE;
+}
+
 ChessGame::ChessGame()
 {
+	setupDefaultGame();
 }
 
 void ChessGame::start()
@@ -44,9 +77,9 @@ void ChessGame::draw() const
 				int y = sideCoordinatesNumber;
 				int x = xDrawingPosition;
 
-				if (board[y][x]->isSquareNotEmpty())
+				if (board[y][x]->isSquareOccupied())
 				{
-					result = (char) board[y][x]->getPieceType();
+					result = (char)board[y][x]->getPieceType();
 
 					if (board[y][x]->isPieceBlack())
 						result = tolower(result);

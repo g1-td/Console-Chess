@@ -2,6 +2,12 @@
 #include <memory>
 #include "Piece.h"
 #include "NotationToCoords.h"
+#include "Rook.h"
+#include "Knight.h"
+#include "Bishop.h"
+#include "Queen.h"
+#include "King.h"
+#include "Pawn.h"
 #pragma once
 class ChessGame
 {
@@ -9,6 +15,7 @@ class ChessGame
 	Piece::Color playerTurn;
 	bool autoDraw = true;
 
+	void setupDefaultGame();
 
 	public:
 	ChessGame();

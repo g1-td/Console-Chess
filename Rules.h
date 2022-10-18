@@ -17,7 +17,7 @@ namespace Rules
 			int y = c.startY;
 			int x = intermediateX;
 
-			if (board[y][x]->isSquareNotEmpty())
+			if (board[y][x]->isSquareOccupied())
 			{
 				return false;
 			}
@@ -36,7 +36,7 @@ namespace Rules
 			int y = intermediateY;
 			int x = c.exitX;
 
-			if (board[y][x]->isSquareNotEmpty())
+			if (board[y][x]->isSquareOccupied())
 			{
 				return false;
 			}
@@ -54,7 +54,7 @@ namespace Rules
 
 		for (int i = intermediateY; i != c.startY; i += exitToStartYDirection)
 		{
-			if (board[intermediateY][intermediateX]->isSquareNotEmpty())
+			if (board[intermediateY][intermediateX]->isSquareOccupied())
 			{
 				return false;
 			}

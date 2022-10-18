@@ -1,8 +1,8 @@
 #include "Knight.h"
 
-Piece::Type Knight::getPieceType() const
+Knight::Type Knight::getPieceType() const
 {
-	return Piece::Type::KNIGHT;
+	return Type::KNIGHT;
 }
 
 bool Knight::areSquaresValid(const Coords& c, const std::unique_ptr<Piece> board[8][8]) const

@@ -1,9 +1,9 @@
 #include "Bishop.h"
 #include "Rules.h"
 
-Piece::Type Bishop::getPieceType() const
+Bishop::Type Bishop::getPieceType() const
 {
-	return Piece::Type::BISHOP;
+	return Type::BISHOP;
 }
 
 bool Bishop::areSquaresValid(const Coords& c, const std::unique_ptr<Piece> board[8][8]) const

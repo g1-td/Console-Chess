@@ -12,7 +12,7 @@ namespace
 		for (char& currentChar : str) { currentChar = toupper(currentChar); }
 		return str;
 	}
-	std::string cutNotationStringInHalf(std::string& notationString, bool isXinString) { return notationString.substr(0, notationString.length() - (2 + isXinString)); }
+	std::string cutStringInHalf(std::string& notationString, bool isXinString) { return notationString.substr(0, notationString.length() - (2 + isXinString)); }
 	int colCharToInt(char c)
 	{
 		// return 0 means char is NOT 'A' through 'H'
@@ -31,10 +31,10 @@ namespace
 		return col[c];
 	}
 	int coordNumberToInt(char c) { return c - '0'; }
-	bool isInvalidColCharCoordinate(char c) { return colCharToInt(c) == 0; }
+	bool isInvalidColCoordinate(char c) { return colCharToInt(c) == 0; }
 	bool notationStringInvalidLength(const std::string& notationString) { return notationString.length() < 2 || notationString.length() > 5; }
 	bool isXinNotationString(const std::string& notationString) { return notationString[notationString.length() - 3] == 'X'; }
-	bool areLastTwoCoordsNotValid(char last, char preLast) { return !isdigit(last) || isInvalidColCharCoordinate(preLast); }
+	bool areLastTwoCoordsNotValid(char last, char preLast) { return !isdigit(last) || isInvalidColCoordinate(preLast); }
 	bool isCastling(const std::string notationString) { return notationString[0] == 'O'; }
 	bool isKingSideCastle(const std::string notationString) { return notationString == "O-O"; }
 	bool isQueenSideCastle(const std::string notationString) { return notationString == "O-O-O"; }
@@ -117,14 +117,14 @@ namespace
 		if (isPawnAdvance(notationString)) return pawnAdvance(board, c, direction);
 
 		bool charXinNotationStr = isXinNotationString(notationString);
-		notationString = cutNotationStringInHalf(notationString, charXinNotationStr);
+		notationString = cutStringInHalf(notationString, charXinNotationStr);
 
 		Piece::Type notationPiece = (Piece::Type)notationString[0];
 
 		if (notationString.length() == 1)
 		{
 			// axb4, dxc2, hxg5...
-			if (!isInvalidColCharCoordinate(notationString[0]))
+			if (!isInvalidColCoordinate(notationString[0]))
 			{
 				c.startX = colCharToInt(notationString[0]) - 1;
 				c.startY = c.exitY - direction;
@@ -138,12 +138,14 @@ namespace
 				{
 					for (int x = 0; x < 8; x++)
 					{
+
+						c.startY = y;
+						c.startX = x;
+
 						if (board[y][x]->isSquareOccupied() &&
 							board[y][x]->isPieceType(notationPiece) &&
 							board[y][x]->areSquaresValid(c, board))
 						{
-							c.startY = y;
-							c.startX = x;
 							return c;
 						}
 					}
@@ -153,19 +155,19 @@ namespace
 		else
 		{
 			// Rbd4, Nfxg2, Raa6... 
-			if (!isInvalidColCharCoordinate(notationString[1]))
+			if (!isInvalidColCoordinate(notationString[1]))
 			{
 				int col = colCharToInt(notationString[1]) - 1;
+				c.startX = col;
 
 				for (int y = 0; y < 8; y++)
 				{
+					c.startY = y;
+
 					if (board[y][col]->isSquareOccupied() &&
 						board[y][col]->isPieceType(notationPiece) &&
 						board[y][col]->areSquaresValid(c, board))
 					{
-						c.startX = col;
-						c.startY = y;
-
 						return c;
 					}
 				}
@@ -173,17 +175,17 @@ namespace
 			// R2d4, N4xg3, R1a6... 
 			else
 			{
-				int row = notationString[1] - 1;
+				int row = coordNumberToInt(notationString[1]) - 1;
+				c.startY = row;
 
 				for (int x = 0; x < 8; x++)
 				{
+					c.startX = x;
+
 					if (board[row][x]->isSquareOccupied() &&
 						board[row][x]->isPieceType(notationPiece) &&
 						board[row][x]->areSquaresValid(c, board))
 					{
-						c.startX = x;
-						c.startY = row;
-
 						return c;
 					}
 				}

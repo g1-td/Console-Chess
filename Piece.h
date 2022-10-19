@@ -6,12 +6,12 @@ class Piece
 	public:
 
 	enum class Color { WHITE, BLACK };
-	enum class Type { ROOK = 'R', KNIGHT = 'N', BISHOP = 'B', QUEEN = 'Q', KING = 'K', PAWN = 'P'};
+	enum class Type { ROOK = 'R', KNIGHT = 'N', BISHOP = 'B', QUEEN = 'Q', KING = 'K', PAWN = 'P' };
 
 	Piece(Color pieceColor) : pieceColor{ pieceColor } {};
 	~Piece() = default;
 
-	
+
 	Color getPieceColor() const { return pieceColor; };
 	static int getPawnMoveDirection(const Color pieceColor) { return pieceColor == Color::WHITE ? 1 : -1; };
 	virtual Type getPieceType() const = 0;

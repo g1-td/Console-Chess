@@ -14,6 +14,6 @@ class Pawn :
 	bool isPawnNotMoved(const Coords& c) const;
 	bool isMovedUpOnce(const Coords& c) const;
 	bool isMovedUpTwice(const Coords& c) const;
-	bool exitIsUpAndLeft(const Coords& c) const;
-	bool exitIsUpAndRight(const Coords& c) const;
+	bool exitIsUpAndLeft(const Coords& c, int direction) const;
+	bool exitIsUpAndRight(const Coords& c, int direction) const;
 };

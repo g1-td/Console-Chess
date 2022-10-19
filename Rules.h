@@ -67,6 +67,6 @@ namespace Rules
 
 	static bool isStartExitOnSameDiagonal(const Coords& c)
 	{
-		return (c.exitX - c.startX == c.exitY - c.startY) || (c.exitX - c.startX == c.startY - c.exitX);
+		return (c.exitX - c.startX == c.exitY - c.startY) || (c.exitX - c.startX == c.startY - c.exitY);
 	};
 };

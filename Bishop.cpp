@@ -14,3 +14,8 @@ bool Bishop::areSquaresValid(const Coords& c, const std::unique_ptr<Piece> board
 	}
 	return false;
 }
+
+std::unique_ptr<Piece> Bishop::clone() const
+{
+	return std::make_unique<Bishop>(*this);
+}

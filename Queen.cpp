@@ -22,3 +22,8 @@ bool Queen::areSquaresValid(const Coords& c, const std::unique_ptr<Piece> board[
 	}
 	return false;
 }
+
+std::unique_ptr<Piece> Queen::clone() const
+{
+	return std::make_unique<Queen>(*this);
+}

@@ -75,3 +75,8 @@ bool Pawn::areSquaresValid(const Coords& c, const std::unique_ptr<Piece> board[8
 	}
 	return false;
 }
+
+std::unique_ptr<Piece> Pawn::clone() const
+{
+	return std::make_unique<Pawn>(*this);
+}

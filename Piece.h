@@ -16,6 +16,7 @@ class Piece
 	static int getPawnMoveDirection(const Color pieceColor) { return pieceColor == Color::WHITE ? 1 : -1; };
 	virtual Type getPieceType() const = 0;
 	virtual bool areSquaresValid(const Coords& c, const std::unique_ptr<Piece> piece[8][8]) const = 0;
+	virtual std::unique_ptr<Piece> clone() const = 0;
 
 	bool setMovedFlag(bool newFlag) { return movedFlag = newFlag; };
 	bool getMovedFlag() const { return movedFlag; };

@@ -40,10 +40,10 @@ namespace
 	bool isQueenSideCastle(const std::string notationString) { return notationString == "O-O-O"; }
 	bool isPawnAdvance(const std::string notationString) { return notationString.length() == 2; }
 	Coords invalidCoords() { Coords c; return c; }
-	Coords kingSideCastle(const Piece::Color playerTurn)
+	Coords kingSideCastle(const Piece::Color playerTurnColor)
 	{
 		Coords c;
-		int kingCoords = playerTurn == Piece::Color::BLACK ? 7 : 0;
+		int kingCoords = playerTurnColor == Piece::Color::BLACK ? 7 : 0;
 
 		c.startX = 4;
 		c.exitX = 6;
@@ -52,10 +52,10 @@ namespace
 
 		return c;
 	}
-	Coords queenSideCastle(const Piece::Color playerTurn)
+	Coords queenSideCastle(const Piece::Color playerTurnColor)
 	{
 		Coords c;
-		int kingCoords = playerTurn == Piece::Color::BLACK ? 7 : 0;
+		int kingCoords = playerTurnColor == Piece::Color::BLACK ? 7 : 0;
 
 		c.startX = 4;
 		c.exitX = 2;
@@ -64,13 +64,13 @@ namespace
 
 		return c;
 	}
-	Coords castle(const Piece::Color playerTurn, const std::string notationString)
+	Coords castle(const Piece::Color playerTurnColor, const std::string notationString)
 	{
 		if (isKingSideCastle(notationString))
-			return kingSideCastle(playerTurn);
+			return kingSideCastle(playerTurnColor);
 
 		if (isQueenSideCastle(notationString))
-			return queenSideCastle(playerTurn);
+			return queenSideCastle(playerTurnColor);
 
 		else return invalidCoords();
 	}
@@ -94,13 +94,13 @@ namespace
 		return invalidCoords();
 	}
 
-	static Coords NotationToCoords(const std::unique_ptr<Piece> board[8][8], const Piece::Color playerTurn, std::string notationString)
+	static Coords NotationToCoords(const std::unique_ptr<Piece> board[8][8], const Piece::Color playerTurnColor, std::string notationString)
 	{
 		Coords c;
 		stringToUpper(notationString);
 
 		if (notationStringInvalidLength(notationString)) return invalidCoords();
-		if (isCastling(notationString)) return castle(playerTurn, notationString);
+		if (isCastling(notationString)) return castle(playerTurnColor, notationString);
 
 		char lastChar = notationString[notationString.length() - 1];
 		char preLastChar = notationString[notationString.length() - 2];
@@ -111,7 +111,7 @@ namespace
 		c.exitX = colCharToInt(preLastChar) - 1;
 		c.exitY = coordNumberToInt(lastChar) - 1;
 
-		int direction = Piece::getPawnMoveDirection(playerTurn);
+		int direction = Piece::getPawnMoveDirection(playerTurnColor);
 
 		// d4, a6, c3... 
 		if (isPawnAdvance(notationString)) return pawnAdvance(board, c, direction);

@@ -12,3 +12,8 @@ bool King::areSquaresValid(const Coords& c, const std::unique_ptr<Piece> board[8
 		( abs(c.exitY - c.startY) <= 1 )
 		);
 }
+
+std::unique_ptr<Piece> King::clone() const
+{
+	return std::make_unique<King>(*this);
+}

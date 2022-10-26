@@ -1,5 +1,4 @@
 #include "Queen.h"
-#include "Rules.h"
 
 Queen::Type Queen::getPieceType() const
 {
@@ -10,15 +9,15 @@ bool Queen::areSquaresValid(const Coords& c, const std::unique_ptr<Piece> board[
 {
 	if (c.startY == c.exitY)
 	{
-		return Rules::areIntermediateXSquaresEmpty(c, board);
+		return areIntermediateXSquaresEmpty(c, board);
 	}
 	else if (c.startX == c.exitX)
 	{
-		return Rules::areIntermediateYSquaresEmpty(c, board);
+		return areIntermediateYSquaresEmpty(c, board);
 	}
-	else if (Rules::isStartExitOnSameDiagonal(c))
+	else if (isStartExitOnSameDiagonal(c))
 	{
-		return Rules::areIntermediateDiagonalSquaresEmpty(c, board);
+		return areIntermediateDiagonalSquaresEmpty(c, board);
 	}
 	return false;
 }

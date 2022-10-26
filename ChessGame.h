@@ -25,32 +25,32 @@ class ChessGame
 	private:
 	void turn();
 	void alternateTurn();
+	void setupDefaultBoard();
 	bool gameOver() const;
 	
-	void setupDefaultBoard();
-	bool isKingInCheck(const std::unique_ptr<Piece> board[8][8]) const;
-	bool isMoveLegal(const Coords& c) const;
-	bool doesPlayerHaveMoves() const;
-	void CHECKMATE() const;
-	void STALEMATE() const;
+	static Piece::Color ReturnAlternateTurn(const Piece::Color& playerTurnColor);
+	bool InputHasCommands(const std::string& input);
+	static void movePiece(const Coords& c, std::unique_ptr<Piece> b[8][8]);
+	static void copyBoard(const std::unique_ptr<Piece> original[8][8], std::unique_ptr<Piece> copy[8][8]);
+	
+	// Rules
+	static bool isMoveLegal(const Coords& c, const std::unique_ptr<Piece> board[8][8], const Piece::Color& playerTurnColor);
+	static bool isKingInCheck(const std::unique_ptr<Piece> board[8][8], const Piece::Color& playerTurnColor);
+	static Coords findKing(const std::unique_ptr<Piece> board[8][8], const Piece::Color& playerTurnColor);
+	static bool doesPlayerHaveMoves(const std::unique_ptr<Piece> board[8][8], const Piece::Color& playerTurnColor);
 
-	Coords findKing(const std::unique_ptr<Piece> board[8][8]) const;
-	Piece::Color ReturnAlternateTurn() const;
-
-	void copyCurrentBoardTo(std::unique_ptr<Piece> copy[8][8]) const;
-	void makeMoveInBoard(const Coords c, std::unique_ptr<Piece> copy[8][8]) const;
-	void filterInputForCommands(const std::string& input);
+	// Visual 
+	void draw() const;
 	bool callDrawToggle();
 	void callDraw() const;
-	void draw() const;
-	static void invalidMove();
 	static void help();
-
+	static void invalidMove();
+	void CHECKMATE() const;
+	void STALEMATE() const;
 	struct helpers
 	{
 		static void drawLineA();
 		static void drawFooter();
-		static void drawCoordinates(int number);
 		static bool isNotFillerSpace(int number);
 	};
 };

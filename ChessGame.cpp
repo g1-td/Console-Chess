@@ -1,5 +1,4 @@
 #include "ChessGame.h"
-#include "Rules.h"
 
 
 ChessGame::ChessGame()
@@ -7,6 +6,7 @@ ChessGame::ChessGame()
 	setupDefaultBoard();
 	start();
 }
+
 void ChessGame::start()
 {
 	while (!gameOver())
@@ -26,49 +26,47 @@ void ChessGame::turn()
 
 		std::string userInput;
 		std::cin >> userInput;
-
 		stringToUpper(userInput);
-		filterInputForCommands(userInput);
 
-		Coords c = NotationToCoords(board, playerTurnColor, userInput);
-
-		if (isMoveLegal(c))
+		if (!InputHasCommands(userInput))
 		{
-			makeMoveInBoard(c, board);
-			break;
+			Coords c = NotationToCoords(board, playerTurnColor, userInput);
+
+			if (isMoveLegal(c, board, playerTurnColor))
+			{
+				movePiece(c, board);
+				break;
+			}
+			else invalidMove();
 		}
-		else invalidMove();
 	}
 }
 
-bool ChessGame::isMoveLegal(const Coords& c) const
+bool ChessGame::isMoveLegal(const Coords& c, const std::unique_ptr<Piece> board[8][8], const Piece::Color& playerTurnColor)
 {
 	Piece* start = board[c.startY][c.startX].get();
 	Piece* exit = board[c.exitY][c.exitX].get();
 
 	if (start->isSquareOccupied() &&
-		start->getPieceColor() == playerTurnColor &&
-		!exit->isSquareOccupied() ||
-		exit->getPieceColor() != playerTurnColor &&
-		start->areSquaresValid(c, board))
+		start->isPieceColor(playerTurnColor))
 	{
-		std::unique_ptr<Piece> copyBoard[8][8];
+		if (!exit->isSquareOccupied() ||
+			!exit->isPieceColor(playerTurnColor))
+		{
+			if (start->areSquaresValid(c, board))
+			{
+				std::unique_ptr<Piece> boardCopy[8][8];
+				copyBoard(board, boardCopy);
 
-		copyCurrentBoardTo(copyBoard);
-		makeMoveInBoard(c, copyBoard);
+				movePiece(c, boardCopy);
 
-		return !isKingInCheck(copyBoard);
+				return !isKingInCheck(boardCopy, playerTurnColor);
+			}
+		}
 	}
 	return false;
 }
-Piece::Color ChessGame::ReturnAlternateTurn() const
-{
-	auto WHITE = Piece::Color::WHITE;
-	auto BLACK = Piece::Color::BLACK;
-
-	return playerTurnColor == WHITE ? BLACK : WHITE;
-}
-Coords ChessGame::findKing(const std::unique_ptr<Piece> board[8][8]) const
+Coords ChessGame::findKing(const std::unique_ptr<Piece> board[8][8], const Piece::Color& playerTurnColor)
 {
 	// Only startX & Y are used
 	Coords c;
@@ -82,7 +80,7 @@ Coords ChessGame::findKing(const std::unique_ptr<Piece> board[8][8]) const
 		for (int x = 0; x < 8; ++x)
 		{
 			if (board[y][x]->isSquareOccupied() &&
-				board[y][x]->getPieceColor() == playerTurnColor &&
+				board[y][x]->isPieceColor(playerTurnColor) &&
 				board[y][x]->isPieceType(Piece::Type::KING))
 			{
 				c.startY = y;
@@ -94,62 +92,37 @@ Coords ChessGame::findKing(const std::unique_ptr<Piece> board[8][8]) const
 	}
 	return c;
 }
-void ChessGame::copyCurrentBoardTo(std::unique_ptr<Piece> copy[8][8]) const
-{
-	for (int y = 0; y < 8; y++)
-	{
-		for (int x = 0; x < 8; x++)
-		{
-			auto sqr = board[y][x].get();
-
-			if (sqr->isSquareOccupied())
-			{
-				copy[y][x] = sqr->clone();
-			}
-		}
-	}
-}
-void ChessGame::makeMoveInBoard(const Coords c, std::unique_ptr<Piece> copy[8][8]) const
-{
-	copy[c.exitY][c.exitX] = this->board[c.startY][c.startX]->clone();
-	copy[c.startX][c.startX] = nullptr;
-}
-bool ChessGame::callDrawToggle() { return (autoDraw = !autoDraw); }
 bool ChessGame::gameOver() const
 {
-	bool hasMoves = doesPlayerHaveMoves();
+	bool hasMoves = doesPlayerHaveMoves(board, playerTurnColor);
 
-	if (isKingInCheck(board))
+	if (!hasMoves)
 	{
-		CHECKMATE();
+		isKingInCheck(board, playerTurnColor) ? CHECKMATE() : STALEMATE();
 		return true;
 	}
-	else if (!hasMoves)
-	{
-		STALEMATE();
-		return true;
-	}
-
-	return false;
+	else return false;
 }
-bool ChessGame::isKingInCheck(const std::unique_ptr<Piece> board[8][8]) const
+bool ChessGame::isKingInCheck(const std::unique_ptr<Piece> board[8][8], const Piece::Color& playerTurnColor)
 {
 	Coords c;
-	Coords king = findKing(board);
+	Coords king = findKing(board, playerTurnColor);
 
-	c.startX = king.startX;
-	c.startY = king.startY;
+	c.exitX = king.startX;
+	c.exitY = king.startY;
+
+	auto enemyTurnColor = ReturnAlternateTurn(playerTurnColor);
 
 	for (int y = 0; y < 8; ++y)
 	{
 		for (int x = 0; x < 8; ++x)
 		{
-			c.exitX = x;
-			c.exitY = y;
+			c.startX = x;
+			c.startY = y;
 
 			if (board[y][x]->isSquareOccupied() &&
-				board[y][x]->getPieceColor() != playerTurnColor &&
-				isMoveLegal(c))
+				board[y][x]->isPieceColor(enemyTurnColor) &&
+				isMoveLegal(c, board, enemyTurnColor))
 			{
 				return true;
 			}
@@ -157,7 +130,7 @@ bool ChessGame::isKingInCheck(const std::unique_ptr<Piece> board[8][8]) const
 	}
 	return false;
 }
-bool ChessGame::doesPlayerHaveMoves() const
+bool ChessGame::doesPlayerHaveMoves(const std::unique_ptr<Piece> board[8][8], const Piece::Color& playerTurnColor)
 {
 	Coords c;
 
@@ -166,7 +139,7 @@ bool ChessGame::doesPlayerHaveMoves() const
 		for (int x = 0; x < 8; x++)
 		{
 			if (board[y][x]->isSquareOccupied() &&
-				board[y][x]->getPieceColor() == playerTurnColor)
+				board[y][x]->isPieceColor(playerTurnColor))
 			{
 				c.startY = y;
 				c.startX = x;
@@ -178,7 +151,7 @@ bool ChessGame::doesPlayerHaveMoves() const
 						c.exitY = yd;
 						c.exitX = xd;
 
-						if (isMoveLegal(c)) return true;
+						if (isMoveLegal(c, board, playerTurnColor)) return true;
 					}
 				}
 			}
@@ -186,22 +159,34 @@ bool ChessGame::doesPlayerHaveMoves() const
 	}
 	return false;
 }
-void ChessGame::alternateTurn() { playerTurnColor = ReturnAlternateTurn(); }
-void ChessGame::callDraw() const { autoDraw ? draw() : void(); }
-void ChessGame::CHECKMATE() const
-{
-	draw();
 
-	std::string winner;
-	(bool)ReturnAlternateTurn() ? winner = "BLACK" : winner = "WHITE";
-
-	std::cout << winner << "WON BY CHECKMATE!\n";
-}
-void ChessGame::STALEMATE() const
+void ChessGame::movePiece(const Coords& c, std::unique_ptr<Piece> b[8][8])
 {
-	draw();
-	std::cout << "STALEMATE!";
+	b[c.exitY][c.exitX] = std::move(b[c.startY][c.startX]);
 }
+void ChessGame::copyBoard(const std::unique_ptr<Piece> original[8][8], std::unique_ptr<Piece> copy[8][8])
+{
+	for (int y = 0; y < 8; y++)
+	{
+		for (int x = 0; x < 8; x++)
+		{
+			auto sqr = original[y][x].get();
+
+			if (sqr->isSquareOccupied())
+			{
+				copy[y][x] = sqr->clone();
+			}
+		}
+	}
+}
+Piece::Color ChessGame::ReturnAlternateTurn(const Piece::Color& playerTurnColor)
+{
+	auto WHITE = Piece::Color::WHITE;
+	auto BLACK = Piece::Color::BLACK;
+
+	return playerTurnColor == WHITE ? BLACK : WHITE;
+}
+void ChessGame::alternateTurn() { playerTurnColor = ReturnAlternateTurn(playerTurnColor); }
 void ChessGame::setupDefaultBoard()
 {
 	board[0][0] = std::make_unique<Rook>(Piece::Color::WHITE);
@@ -232,6 +217,59 @@ void ChessGame::setupDefaultBoard()
 
 	playerTurnColor = Piece::Color::WHITE;
 }
+bool ChessGame::InputHasCommands(const std::string& input)
+{
+	if (input == "HELP")
+	{
+		system("cls");
+		help();
+		return true;
+	}
+	else if (input == "DRAW")
+	{
+		system("cls");
+		draw();
+		return true;
+	}
+	else if (input == "AUTO")
+	{
+		system("cls");
+		callDrawToggle();
+		return true;
+	}
+	return false;
+}
+
+bool ChessGame::callDrawToggle() { return (autoDraw = !autoDraw); }
+void ChessGame::callDraw() const { autoDraw ? draw() : void(); }
+void ChessGame::invalidMove()
+{
+	/*
+		TODO :
+
+		Add a reason why the move was invalid
+		such as "No BISHOP found on e2"
+
+		This is kind of useless and work for the sake of work,
+		but it might be kinda cool for somebody who can't play chess
+		so consider adding it after everything else is finished!
+	*/
+	std::cout << "Move is Invalid.\n\n";
+}
+void ChessGame::CHECKMATE() const
+{
+	draw();
+
+	std::string winner;
+	(bool)ReturnAlternateTurn(playerTurnColor) ? winner = "BLACK" : winner = "WHITE";
+
+	std::cout << winner << " WON BY CHECKMATE!\n";
+}
+void ChessGame::STALEMATE() const
+{
+	draw();
+	std::cout << "STALEMATE!";
+}
 void ChessGame::draw() const
 {
 	/*
@@ -247,7 +285,7 @@ void ChessGame::draw() const
 	{
 		if (helpers::isNotFillerSpace(totalRow))
 		{
-			helpers::drawCoordinates(sideCoordinatesNumber);
+			std::cout << "  " << sideCoordinatesNumber << "  |";
 			--sideCoordinatesNumber;
 
 			int xDrawingPosition = 0;
@@ -263,34 +301,20 @@ void ChessGame::draw() const
 				{
 					result = (char)board[y][x]->getPieceType();
 
-					if (board[y][x]->isPieceBlack())
+					if (board[y][x]->isPieceColor(Piece::Color::BLACK))
 						result = tolower(result);
-
-					helpers::drawCoordinates(result);
-					++xDrawingPosition;
-
-					if (currentX == 7)
-						std::cout << "\n";
 				}
+
+				std::cout << " " << result << " |";
+				++xDrawingPosition;
+
+				if (currentX == 7)
+					std::cout << "\n";
 			}
 		}
 		else helpers::drawLineA();
 	}
 	helpers::drawFooter();
-}
-void ChessGame::invalidMove()
-{
-	/* 
-		TODO : 
-		
-		Add a reason why the move was invalid
-		such as "No BISHOP found on e2"
-
-		This is kind of useless and work for the sake of work,
-		but it might be kinda cool for somebody who can't play chess
-		so consider adding it after everything else is finished!
-	*/
-	std::cout << "Move is Invalid.\n\n";
 }
 void ChessGame::help()
 {
@@ -300,24 +324,6 @@ void ChessGame::help()
 	std::cout << "\"draw\" - Draws the current board position\n";
 	std::cout << "\"auto\" - Toggle calling draw after every turn\n";
 }
-void ChessGame::filterInputForCommands(const std::string& input)
-{
-	if (input == "HELP")
-	{
-		system("cls");
-		help();
-	}
-	else if (input == "DRAW")
-	{
-		system("cls");
-		draw();
-	}
-	else if (input == "AUTO")
-	{
-		system("cls");
-		callDrawToggle();
-	}
-}
 void ChessGame::helpers::drawLineA()
 {
 	std::cout << "     |-------------------------------|\n";
@@ -325,10 +331,6 @@ void ChessGame::helpers::drawLineA()
 void ChessGame::helpers::drawFooter()
 {
 	std::cout << "       a   b   c   d   e   f   g   h\n";
-}
-void ChessGame::helpers::drawCoordinates(int number)
-{
-	std::cout << "  " << number << "  |";
 }
 bool ChessGame::helpers::isNotFillerSpace(int number)
 {

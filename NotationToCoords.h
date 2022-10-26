@@ -124,13 +124,14 @@ namespace
 		if (notationString.length() == 1)
 		{
 			// axb4, dxc2, hxg5...
-			if (!isInvalidColCoordinate(notationString[0]))
+			if (!isInvalidColCoordinate(notationString[0]) && charXinNotationStr)
 			{
 				c.startX = colCharToInt(notationString[0]) - 1;
 				c.startY = c.exitY - direction;
 
 				return c;
 			}
+			
 			// Bc4, Rxa3, Ke2...
 			else
 			{
@@ -144,6 +145,7 @@ namespace
 
 						if (board[y][x]->isSquareOccupied() &&
 							board[y][x]->isPieceType(notationPiece) &&
+							board[y][x]->isPieceColor(playerTurnColor) &&
 							board[y][x]->areSquaresValid(c, board))
 						{
 							return c;
@@ -166,12 +168,14 @@ namespace
 
 					if (board[y][col]->isSquareOccupied() &&
 						board[y][col]->isPieceType(notationPiece) &&
+						board[y][col]->isPieceColor(playerTurnColor) &&
 						board[y][col]->areSquaresValid(c, board))
 					{
 						return c;
 					}
 				}
 			}
+			
 			// R2d4, N4xg3, R1a6... 
 			else
 			{
@@ -184,6 +188,7 @@ namespace
 
 					if (board[row][x]->isSquareOccupied() &&
 						board[row][x]->isPieceType(notationPiece) &&
+						board[row][x]->isPieceColor(playerTurnColor) &&
 						board[row][x]->areSquaresValid(c, board))
 					{
 						return c;

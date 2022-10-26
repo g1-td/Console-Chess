@@ -1,5 +1,4 @@
 #include "Pawn.h"
-#include "Rules.h"
 
 Pawn::Type Pawn::getPieceType() const
 {
@@ -33,7 +32,7 @@ bool Pawn::canEnPassant(const Coords& c, const std::unique_ptr<Piece> board[8][8
 	int direction = getPawnMoveDirection(pieceColor);
 
 	if (exitIsUpAndRight(c, direction) && 
-		board[c.startY][c.startX - 1]->isSquareOccupied() && 
+		board[c.startY][c.startX + 1]->isSquareOccupied() && 
 		board[c.startY][c.startX + 1]->isPieceType(Type::PAWN))
 		return board[c.startY][c.startX + 1]->getMovedFlag();
 
@@ -59,7 +58,7 @@ bool Pawn::areSquaresValid(const Coords& c, const std::unique_ptr<Piece> board[8
 			else
 			{
 				if (isPawnNotMoved(c) &&
-					Rules::areIntermediateYSquaresEmpty(c, board) &&
+					areIntermediateYSquaresEmpty(c, board) &&
 					isMovedUpTwice(c))
 				{
 					return true;
@@ -71,7 +70,7 @@ bool Pawn::areSquaresValid(const Coords& c, const std::unique_ptr<Piece> board[8
 	else
 	{
 		if (exitIsUpAndRight(c, direction) || exitIsUpAndLeft(c, direction))
-			return isPieceEnemy(board[c.exitY][c.exitX].get());
+			return !isPieceColor(board[c.exitY][c.exitX]->getPieceColor());
 	}
 	return false;
 }

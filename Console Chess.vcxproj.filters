@@ -74,9 +74,6 @@
     <ClInclude Include="ChessGame.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="Rules.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
     <ClInclude Include="NotationToCoords.h">
       <Filter>Header Files</Filter>
     </ClInclude>

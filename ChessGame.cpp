@@ -19,9 +19,11 @@ void ChessGame::start()
 
 void ChessGame::turn()
 {
+	expireEnPassantFlags();
+
 	while (true)
 	{
-		std::cout << "Enter Move:\n\n >> ";
+		std::cout << "\n\n>> ";
 		std::string userInput = getParsedUserInput();
 
 		if (!inputHasCommands(userInput))
@@ -30,6 +32,9 @@ void ChessGame::turn()
 
 			if (isMoveLegal(c, board, playerTurnColor))
 			{
+				if (isPawnMovedTwice(c)) { makePawnEnPassantable(c); }
+				checkForEnPassant(c);
+
 				movePiece(c, board);
 				break;
 			}
@@ -249,7 +254,51 @@ Piece::Color ChessGame::ReturnAlternateTurn(const Piece::Color& playerTurnColor)
 
 	return playerTurnColor == WHITE ? BLACK : WHITE;
 }
+bool ChessGame::isPawnMovedTwice(const Coords& c) const
+{
+	return (board[c.startY][c.startX]->isPieceType(Piece::Type::PAWN) &&
+		c.exitY == c.startY + (2 * Piece::getPawnMoveDirection(playerTurnColor))) ? true : false;
+}
+void ChessGame::expireEnPassantFlags()
+{
+	for (int y = 3; y < 5; y++)
+	{
+		for (int x = 0; x < 8; x++)
+		{
+			Piece* sqr = board[y][x].get();
+
+			if (sqr->isSquareOccupied() &&
+				sqr->isPieceType(Piece::Type::PAWN) &&
+				sqr->isPieceColor(playerTurnColor))
+			{
+				sqr->setMovedFlag(false);
+			}
+		}
+	}
+}
+void ChessGame::checkForEnPassant(const Coords& c)
+{
+	/* 
+	*	This is a HORRIBLE way of doing things as runs on each move. 
+	*	But given that everything else is const and I have no way of knowing
+	*	if something is a pawn I'm sort of forced into this for now...
+	*/
+	if (board[c.startY][c.startX - 1]->isSquareOccupied() &&
+		board[c.startY][c.startX - 1]->getMovedFlag())
+	{
+		board[c.startY][c.startX - 1] = nullptr;
+	}
+	else if (board[c.startY][c.startX + 1]->isSquareOccupied() &&
+		board[c.startY][c.startX + 1]->getMovedFlag())
+	{
+		board[c.startY][c.startX + 1] = nullptr;
+	}
+}
 Piece::Color ChessGame::alternateTurn() { return playerTurnColor = ReturnAlternateTurn(playerTurnColor); }
+void ChessGame::makePawnEnPassantable(const Coords& c)
+{
+	board[c.startY][c.startX]->setMovedFlag(true);
+}
 bool ChessGame::callDrawToggle() { return (autoDraw = !autoDraw); }
 void ChessGame::invalidMove()
 {

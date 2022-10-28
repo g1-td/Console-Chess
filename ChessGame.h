@@ -27,6 +27,10 @@ class ChessGame
 	bool gameOver() const;
 	static bool isMoveLegal(const Coords& c, const std::unique_ptr<Piece> board[8][8], const Piece::Color& playerTurnColor);
 	
+	void checkForEnPassant(const Coords& c);
+	void expireEnPassantFlags();
+	void makePawnEnPassantable(const Coords& c);
+	bool isPawnMovedTwice(const Coords& c) const;
 	static bool isKingInCheck(const std::unique_ptr<Piece> board[8][8], const Piece::Color& playerTurnColor);
 	static Coords findKing(const std::unique_ptr<Piece> board[8][8], const Piece::Color& playerTurnColor);
 	static bool doesPlayerHaveLegalMoves(const std::unique_ptr<Piece> board[8][8], const Piece::Color& playerTurnColor);

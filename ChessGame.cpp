@@ -1,6 +1,5 @@
 #include "ChessGame.h"
 
-
 ChessGame::ChessGame()
 {
 	setupDefaultBoard();
@@ -23,12 +22,9 @@ void ChessGame::turn()
 	while (true)
 	{
 		std::cout << "Enter Move:\n\n >> ";
+		std::string userInput = getParsedUserInput();
 
-		std::string userInput;
-		std::cin >> userInput;
-		stringToUpper(userInput);
-
-		if (!InputHasCommands(userInput))
+		if (!inputHasCommands(userInput))
 		{
 			Coords c = NotationToCoords(board, playerTurnColor, userInput);
 
@@ -55,12 +51,88 @@ bool ChessGame::isMoveLegal(const Coords& c, const std::unique_ptr<Piece> board[
 		{
 			if (start->areSquaresValid(c, board))
 			{
+				if (exit->isSquareOccupied() &&
+					exit->isPieceType(Piece::Type::KING) &&
+					!exit->isPieceColor(playerTurnColor))
+				{
+					return true;
+				}
+
 				std::unique_ptr<Piece> boardCopy[8][8];
 				copyBoard(board, boardCopy);
 
 				movePiece(c, boardCopy);
 
 				return !isKingInCheck(boardCopy, playerTurnColor);
+			}
+		}
+	}
+	return false;
+}
+
+bool ChessGame::gameOver() const
+{
+	bool hasMoves = doesPlayerHaveLegalMoves(board, playerTurnColor);
+
+	if (!hasMoves)
+	{
+		isKingInCheck(board, playerTurnColor) ? CHECKMATE() : STALEMATE();
+		return true;
+	}
+	else return false;
+}
+
+bool ChessGame::doesPlayerHaveLegalMoves(const std::unique_ptr<Piece> board[8][8], const Piece::Color& playerTurnColor)
+{
+	Coords c;
+
+	for (int y = 0; y < 8; y++)
+	{
+		for (int x = 0; x < 8; x++)
+		{
+			if (board[y][x]->isSquareOccupied() &&
+				board[y][x]->isPieceColor(playerTurnColor))
+			{
+				c.startY = y;
+				c.startX = x;
+
+				for (int yd = 0; yd < 8; yd++)
+				{
+					for (int xd = 0; xd < 8; xd++)
+					{
+						c.exitY = yd;
+						c.exitX = xd;
+
+						if (isMoveLegal(c, board, playerTurnColor)) return true;
+					}
+				}
+			}
+		}
+	}
+	return false;
+}
+bool ChessGame::isKingInCheck(const std::unique_ptr<Piece> board[8][8], const Piece::Color& playerTurnColor)
+{
+	Coords c;
+	Coords king = findKing(board, playerTurnColor);
+
+	c.exitX = king.startX;
+	c.exitY = king.startY;
+
+	auto enemyTurnColor = ReturnAlternateTurn(playerTurnColor);
+
+	for (int y = 0; y < 8; ++y)
+	{
+		for (int x = 0; x < 8; ++x)
+		{
+			c.startX = x;
+			c.startY = y;
+
+			if (board[y][x]->isSquareOccupied() &&
+				board[y][x]->isPieceColor(enemyTurnColor) &&
+				isMoveLegal(c, board, enemyTurnColor))
+			{
+				return true;
 			}
 		}
 	}
@@ -92,74 +164,6 @@ Coords ChessGame::findKing(const std::unique_ptr<Piece> board[8][8], const Piece
 	}
 	return c;
 }
-bool ChessGame::gameOver() const
-{
-	bool hasMoves = doesPlayerHaveMoves(board, playerTurnColor);
-
-	if (!hasMoves)
-	{
-		isKingInCheck(board, playerTurnColor) ? CHECKMATE() : STALEMATE();
-		return true;
-	}
-	else return false;
-}
-bool ChessGame::isKingInCheck(const std::unique_ptr<Piece> board[8][8], const Piece::Color& playerTurnColor)
-{
-	Coords c;
-	Coords king = findKing(board, playerTurnColor);
-
-	c.exitX = king.startX;
-	c.exitY = king.startY;
-
-	auto enemyTurnColor = ReturnAlternateTurn(playerTurnColor);
-
-	for (int y = 0; y < 8; ++y)
-	{
-		for (int x = 0; x < 8; ++x)
-		{
-			c.startX = x;
-			c.startY = y;
-
-			if (board[y][x]->isSquareOccupied() &&
-				board[y][x]->isPieceColor(enemyTurnColor) &&
-				isMoveLegal(c, board, enemyTurnColor))
-			{
-				return true;
-			}
-		}
-	}
-	return false;
-}
-bool ChessGame::doesPlayerHaveMoves(const std::unique_ptr<Piece> board[8][8], const Piece::Color& playerTurnColor)
-{
-	Coords c;
-
-	for (int y = 0; y < 8; y++)
-	{
-		for (int x = 0; x < 8; x++)
-		{
-			if (board[y][x]->isSquareOccupied() &&
-				board[y][x]->isPieceColor(playerTurnColor))
-			{
-				c.startY = y;
-				c.startX = x;
-
-				for (int yd = 0; yd < 8; yd++)
-				{
-					for (int xd = 0; xd < 8; xd++)
-					{
-						c.exitY = yd;
-						c.exitX = xd;
-
-						if (isMoveLegal(c, board, playerTurnColor)) return true;
-					}
-				}
-			}
-		}
-	}
-	return false;
-}
-
 void ChessGame::movePiece(const Coords& c, std::unique_ptr<Piece> b[8][8])
 {
 	b[c.exitY][c.exitX] = std::move(b[c.startY][c.startX]);
@@ -179,14 +183,34 @@ void ChessGame::copyBoard(const std::unique_ptr<Piece> original[8][8], std::uniq
 		}
 	}
 }
-Piece::Color ChessGame::ReturnAlternateTurn(const Piece::Color& playerTurnColor)
+std::string ChessGame::getParsedUserInput()
 {
-	auto WHITE = Piece::Color::WHITE;
-	auto BLACK = Piece::Color::BLACK;
-
-	return playerTurnColor == WHITE ? BLACK : WHITE;
+	std::string userInput;
+	std::cin >> userInput;
+	return stringToUpper(userInput);
 }
-void ChessGame::alternateTurn() { playerTurnColor = ReturnAlternateTurn(playerTurnColor); }
+bool ChessGame::inputHasCommands(std::string userInput)
+{
+	if (userInput == "HELP")
+	{
+		system("cls");
+		help();
+		return true;
+	}
+	else if (userInput == "DRAW")
+	{
+		system("cls");
+		draw();
+		return true;
+	}
+	else if (userInput == "AUTO")
+	{
+		system("cls");
+		callDrawToggle();
+		return true;
+	}
+	return false;
+}
 void ChessGame::setupDefaultBoard()
 {
 	board[0][0] = std::make_unique<Rook>(Piece::Color::WHITE);
@@ -217,31 +241,16 @@ void ChessGame::setupDefaultBoard()
 
 	playerTurnColor = Piece::Color::WHITE;
 }
-bool ChessGame::InputHasCommands(const std::string& input)
-{
-	if (input == "HELP")
-	{
-		system("cls");
-		help();
-		return true;
-	}
-	else if (input == "DRAW")
-	{
-		system("cls");
-		draw();
-		return true;
-	}
-	else if (input == "AUTO")
-	{
-		system("cls");
-		callDrawToggle();
-		return true;
-	}
-	return false;
-}
 
+Piece::Color ChessGame::ReturnAlternateTurn(const Piece::Color& playerTurnColor)
+{
+	auto WHITE = Piece::Color::WHITE;
+	auto BLACK = Piece::Color::BLACK;
+
+	return playerTurnColor == WHITE ? BLACK : WHITE;
+}
+Piece::Color ChessGame::alternateTurn() { return playerTurnColor = ReturnAlternateTurn(playerTurnColor); }
 bool ChessGame::callDrawToggle() { return (autoDraw = !autoDraw); }
-void ChessGame::callDraw() const { autoDraw ? draw() : void(); }
 void ChessGame::invalidMove()
 {
 	/*
@@ -269,6 +278,14 @@ void ChessGame::STALEMATE() const
 {
 	draw();
 	std::cout << "STALEMATE!";
+}
+void ChessGame::help()
+{
+	std::cout << "Enter moves using Standard Chess notation\n";
+	std::cout << "Examples: \"e4\", \"exd5\", \"Neg3\"\n\n";
+	std::cout << "COMMANDS : \n";
+	std::cout << "\"draw\" - Draws the current board position\n";
+	std::cout << "\"auto\" - Toggle calling draw after every turn\n";
 }
 void ChessGame::draw() const
 {
@@ -316,14 +333,7 @@ void ChessGame::draw() const
 	}
 	helpers::drawFooter();
 }
-void ChessGame::help()
-{
-	std::cout << "Enter moves using Standard Chess notation\n";
-	std::cout << "Examples: \"e4\", \"exd5\", \"Neg3\"\n";
-	std::cout << "COMMANDS : \n\n";
-	std::cout << "\"draw\" - Draws the current board position\n";
-	std::cout << "\"auto\" - Toggle calling draw after every turn\n";
-}
+void ChessGame::callDraw() const { autoDraw ? draw() : void(); }
 void ChessGame::helpers::drawLineA()
 {
 	std::cout << "     |-------------------------------|\n";

@@ -32,10 +32,9 @@ void ChessGame::turn()
 
 			if (isMoveLegal(c, board, playerTurnColor))
 			{
-				if (isPawnMovedTwice(c)) { makePawnEnPassantable(c); }
-				checkForEnPassant(c);
-
+				setFlags(c);
 				movePiece(c, board);
+
 				break;
 			}
 			else invalidMove();
@@ -172,6 +171,14 @@ Coords ChessGame::findKing(const std::unique_ptr<Piece> board[8][8], const Piece
 void ChessGame::movePiece(const Coords& c, std::unique_ptr<Piece> b[8][8])
 {
 	b[c.exitY][c.exitX] = std::move(b[c.startY][c.startX]);
+
+	if (b[c.exitY][c.exitX]->isPieceType(Piece::Type::KING))
+	{
+		int direction = Piece::getExitToStartDirection(c.startX, c.exitX);
+		int rookXCoords = direction == 1 ? 0 : 7;
+
+		b[c.startY][c.startX - direction] = std::move(b[c.exitY][rookXCoords]);
+	}
 }
 void ChessGame::copyBoard(const std::unique_ptr<Piece> original[8][8], std::unique_ptr<Piece> copy[8][8])
 {
@@ -295,7 +302,7 @@ void ChessGame::checkForEnPassant(const Coords& c)
 	}
 }
 Piece::Color ChessGame::alternateTurn() { return playerTurnColor = ReturnAlternateTurn(playerTurnColor); }
-void ChessGame::makePawnEnPassantable(const Coords& c)
+void ChessGame::setFlagTrue(const Coords& c)
 {
 	board[c.startY][c.startX]->setMovedFlag(true);
 }
@@ -313,6 +320,11 @@ void ChessGame::invalidMove()
 		so consider adding it after everything else is finished!
 	*/
 	std::cout << "Move is Invalid.\n\n";
+}
+void ChessGame::setFlags(const Coords& c)
+{
+	if (isPawnMovedTwice(c) || isKingOrRook(c)) { setFlagTrue(c); }
+	checkForEnPassant(c);
 }
 void ChessGame::CHECKMATE() const
 {
@@ -335,6 +347,11 @@ void ChessGame::help()
 	std::cout << "COMMANDS : \n";
 	std::cout << "\"draw\" - Draws the current board position\n";
 	std::cout << "\"auto\" - Toggle calling draw after every turn\n";
+}
+bool ChessGame::isKingOrRook(const Coords& c)
+{
+	return board[c.startY][c.startX]->isPieceType(Piece::Type::KING) ||
+		board[c.startY][c.startX]->isPieceType(Piece::Type::ROOK);
 }
 void ChessGame::draw() const
 {

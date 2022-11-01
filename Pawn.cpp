@@ -21,11 +21,11 @@ bool Pawn::isPawnNotMoved(const Coords& c) const
 }
 bool Pawn::exitIsUpAndLeft(const Coords& c, int direction) const
 {
-	return c.exitY == c.startX + direction && c.startX == c.exitX + 1;
+	return c.exitY == c.startY + direction && c.exitX == c.startX - 1;
 }
 bool Pawn::exitIsUpAndRight(const Coords& c, int direction) const
 {
-	return c.exitY == c.startX + direction && c.startX == c.exitX - 1;
+	return c.exitY == c.startY + direction && c.exitX == c.startX + 1;
 }
 bool Pawn::canEnPassant(const Coords& c, const std::unique_ptr<Piece> board[8][8]) const
 {

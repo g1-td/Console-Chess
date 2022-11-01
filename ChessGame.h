@@ -1,3 +1,4 @@
+#pragma once
 #include <iostream>
 #include <memory>
 #include "Piece.h"
@@ -8,7 +9,6 @@
 #include "Queen.h"
 #include "King.h"
 #include "Pawn.h"
-#pragma once
 class ChessGame
 {
 	protected:
@@ -29,7 +29,7 @@ class ChessGame
 	
 	void checkForEnPassant(const Coords& c);
 	void expireEnPassantFlags();
-	void makePawnEnPassantable(const Coords& c);
+	void setFlagTrue(const Coords& c);
 	bool isPawnMovedTwice(const Coords& c) const;
 	static bool isKingInCheck(const std::unique_ptr<Piece> board[8][8], const Piece::Color& playerTurnColor);
 	static Coords findKing(const std::unique_ptr<Piece> board[8][8], const Piece::Color& playerTurnColor);
@@ -40,7 +40,9 @@ class ChessGame
 	static void copyBoard(const std::unique_ptr<Piece> original[8][8], std::unique_ptr<Piece> copy[8][8]);
 	static std::string getParsedUserInput();
 	bool inputHasCommands(std::string userInput);
+	bool isKingOrRook(const Coords& c);
 	void setupDefaultBoard();
+	void setFlags(const Coords& c);
 
 	// Visual 
 	void draw() const;
@@ -56,4 +58,6 @@ class ChessGame
 		static void drawFooter();
 		static bool isNotFillerSpace(int number);
 	};
+	
+	friend class King;
 };

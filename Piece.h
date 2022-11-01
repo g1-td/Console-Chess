@@ -1,6 +1,6 @@
+#pragma once
 #include <memory>
 #include "Coords.h"
-#pragma once
 class Piece
 {
 	public:

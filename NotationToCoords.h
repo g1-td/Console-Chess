@@ -1,9 +1,9 @@
+#pragma once
 #include <memory>
 #include <string>
 #include <map>
 #include "Coords.h"
 #include "Piece.h"
-#pragma once
 
 namespace
 {

@@ -19,6 +19,7 @@ void ChessGame::start()
 
 void ChessGame::turn()
 {
+	++turnCounter;
 	expireEnPassantFlags();
 
 	while (true)
@@ -33,6 +34,7 @@ void ChessGame::turn()
 			if (isMoveLegal(c, board, playerTurnColor))
 			{
 				setFlags(c);
+				updateGameState(c);
 				movePiece(c, board);
 
 				break;
@@ -74,6 +76,88 @@ bool ChessGame::isMoveLegal(const Coords& c, const std::unique_ptr<Piece> board[
 	return false;
 }
 
+bool ChessGame::cmpBoards(const std::unique_ptr<Piece> a[8][8], const std::unique_ptr<Piece> b[8][8])
+{
+	for (int y = 0; y < 8; y++)
+	{
+		for (int x = 0; x < 8; x++)
+		{
+			if (a[y][x]->isSquareOccupied() && b[y][x]->isSquareOccupied())
+			{
+				if (a[y][x]->isSquareOccupied() != b[y][x]->isSquareOccupied() ||
+					a[y][x]->getPieceColor() != b[y][x]->getPieceColor() ||
+					a[y][x]->getPieceType() != b[y][x]->getPieceType())
+				{
+					return false;
+				}
+			}
+			else if (a[y][x]->isSquareOccupied() != b[y][x]->isSquareOccupied())
+				return false;
+		}
+	}
+	return true;
+}
+
+bool ChessGame::fiftyMoveCheck() const
+{
+	//	A move is finished after both sides move
+	//	the counter is incremented after each side moves
+	//	and is thus doubled to account for this.
+	return fiftyMoveCounter == 100 ? true : false;
+}
+
+void ChessGame::fiftyMoveCount(const Coords& c)
+{
+	Piece* start = board[c.startY][c.startX].get();
+	Piece* exit = board[c.exitY][c.exitX].get();
+
+	if (start->isPieceType(Piece::Type::PAWN) ||
+		exit->isSquareOccupied())
+	{
+		fiftyMoveCounter = 0;
+	}
+	else ++fiftyMoveCounter;
+}
+
+bool ChessGame::threeFoldCheck() const
+{
+	return threeFoldCounter == 3 ? true : false;
+}
+
+void ChessGame::threeFoldCount(const Coords& c)
+{
+	Piece* start = board[c.startY][c.startX].get();
+	Piece* exit = board[c.exitY][c.exitX].get();
+
+	if (start->isPieceType(Piece::Type::PAWN) ||
+		exit->isSquareOccupied())
+	{
+		threeFoldCounter = 0;
+		threeFoldCoordsArray.clear();
+	}
+	else if (turnCounter % 2 == 0)
+	{
+		bool wasRepeated = false;
+		for (auto& brd : threeFoldCoordsArray)
+		{
+			if (cmpBoards(board, brd.board))
+			{
+				threeFoldCounter = brd.repeated++;
+				wasRepeated = true;
+				break;
+			}
+		}
+
+		if (!wasRepeated) { threeFoldCoordsArray.push_back(board); }
+	}
+}
+
+void ChessGame::updateGameState(const Coords& c)
+{
+	threeFoldCount(c);
+	fiftyMoveCount(c);
+}
+
 bool ChessGame::gameOver() const
 {
 	bool hasMoves = doesPlayerHaveLegalMoves(board, playerTurnColor);
@@ -83,6 +167,12 @@ bool ChessGame::gameOver() const
 		isKingInCheck(board, playerTurnColor) ? CHECKMATE() : STALEMATE();
 		return true;
 	}
+	else if (fiftyMoveCheck() || threeFoldCheck())
+	{
+		STALEMATE();
+		return true;
+	}
+
 	else return false;
 }
 
@@ -285,8 +375,8 @@ void ChessGame::expireEnPassantFlags()
 }
 void ChessGame::checkForEnPassant(const Coords& c)
 {
-	/* 
-	*	This is a HORRIBLE way of doing things as runs on each move. 
+	/*
+	*	This is a HORRIBLE way of doing things as runs on each move.
 	*	But given that everything else is const and I have no way of knowing
 	*	if something is a pawn I'm sort of forced into this for now...
 	*/

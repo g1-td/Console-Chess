@@ -12,4 +12,12 @@ struct Coords
 
 		return copy;
 	}
+
+	static bool cmpCoords(Coords a, Coords b)
+	{
+		return a.startX == b.startX &&
+			a.startY == b.startY &&
+			a.exitX == b.exitX &&
+			a.exitY == b.exitY;
+	}
 };

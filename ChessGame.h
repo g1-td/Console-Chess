@@ -1,6 +1,7 @@
 #pragma once
 #include <iostream>
 #include <memory>
+#include <vector>
 #include "Piece.h"
 #include "NotationToCoords.h"
 #include "Rook.h"
@@ -11,12 +12,6 @@
 #include "Pawn.h"
 class ChessGame
 {
-	protected:
-	std::unique_ptr<Piece> board[8][8];
-	Piece::Color playerTurnColor;
-	bool autoDraw = true;
-
-
 	public:
 	ChessGame();
 	void start();
@@ -27,6 +22,12 @@ class ChessGame
 	bool gameOver() const;
 	static bool isMoveLegal(const Coords& c, const std::unique_ptr<Piece> board[8][8], const Piece::Color& playerTurnColor);
 	
+	static bool cmpBoards(const std::unique_ptr<Piece> a[8][8], const std::unique_ptr<Piece> b[8][8]);
+	bool fiftyMoveCheck() const;
+	void fiftyMoveCount(const Coords& c);
+	bool threeFoldCheck() const;
+	void threeFoldCount(const Coords& c);
+	void updateGameState(const Coords& c);
 	void checkForEnPassant(const Coords& c);
 	void expireEnPassantFlags();
 	void setFlagTrue(const Coords& c);
@@ -52,12 +53,31 @@ class ChessGame
 	static void invalidMove();
 	void CHECKMATE() const;
 	void STALEMATE() const;
+	
 	struct helpers
 	{
 		static void drawLineA();
 		static void drawFooter();
 		static bool isNotFillerSpace(int number);
 	};
-	
+	struct posInstance
+	{
+		posInstance(std::unique_ptr<Piece> b[8][8])
+		{
+			copyBoard(b, board);
+		}
+
+		std::unique_ptr<Piece> board[8][8];
+		int repeated = 0;
+	};
+
+	std::unique_ptr<Piece> board[8][8];
+	Piece::Color playerTurnColor;
+	std::vector<posInstance> threeFoldCoordsArray;
+	int fiftyMoveCounter = 0;
+	int threeFoldCounter = 0;
+	int turnCounter = 0;
+	bool autoDraw = true;
+
 	friend class King;
 };

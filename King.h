@@ -1,6 +1,6 @@
 #pragma once
 #include "Piece.h"
-#include "ChessGame.h"
+#include "Board.h"
 
 class King :
     public Piece

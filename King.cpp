@@ -29,16 +29,16 @@ bool King::areSquaresValid(const Coords& c, const std::unique_ptr<Piece> board[8
 			{
 				if (areIntermediateXSquaresEmpty(c, board))
 				{
-					std::unique_ptr<Piece> boardCopy[8][8];
-					ChessGame::copyBoard(board, boardCopy);
+					std::unique_ptr<Board> CopyBoard = std::make_unique<Board>();
+					Board::copyBoard(board, CopyBoard->board);
+					CopyBoard->playerTurnColor = pieceColor;
 
 					Coords c1;
 					Coords::copyCoords(c, c1);
-					c1.exitX = c1.startX - direction;
+					c1.exitX = c.startX - direction;
+					CopyBoard->movePiece(c1);
 
-					ChessGame::movePiece(c1, boardCopy);
-
-					return !ChessGame::isKingInCheck(board, pieceColor);
+					return !CopyBoard->isKingInCheck();
 				}
 			}
 		}

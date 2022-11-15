@@ -12,5 +12,5 @@
 
 int main()
 {
-    ChessGame game1;
+    ChessGame game1("rnbqkbnr/pppp1ppp/8/8/2B1P3/8/PB3PPP/RN1QK1NR b KQkq - 0 5");
 }

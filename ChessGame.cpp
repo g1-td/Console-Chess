@@ -3,6 +3,14 @@
 ChessGame::ChessGame()
 {
 	brd = std::make_unique<Board>();
+	brd->newGame();
+	start();
+}
+
+ChessGame::ChessGame(const std::string& fen)
+{
+	if (FEN::isFenValid(fen)) 
+		brd = FEN::toPosition(fen);
 	start();
 }
 
@@ -11,7 +19,6 @@ void ChessGame::start()
 	while (!gameOver())
 	{
 		callDraw();
-
 		turn();
 		nextTurn();
 	}
@@ -19,11 +26,10 @@ void ChessGame::start()
 
 void ChessGame::turn()
 {
-	auto board = brd->board;
-	auto turn = brd->playerTurnColor;
-	auto turnCounter = brd->turnCounter;
-	
-	++turnCounter;
+	auto& board = brd->board;
+	auto& turn = brd->playerTurnColor;
+	auto& turnCounter = brd->turnCounter;
+
 	brd->expireEnPassantFlags();
 
 	while (true)
@@ -40,7 +46,8 @@ void ChessGame::turn()
 				brd->setFlags(c);
 				brd->updateRepetitionState(c);
 				brd->movePiece(c);
-
+				
+				++turnCounter;
 				break;
 			}
 			else invalidMove();

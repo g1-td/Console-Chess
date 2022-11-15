@@ -15,7 +15,7 @@ Coords NotationToCoords::toCoords(const std::unique_ptr<Piece> board[8][8], cons
 
 	/* 1 is subtracted to go from 1-8 notation style to 0-7 array style */
 	c.exitX = colCharToInt(preLastChar) - 1;
-	c.exitY = coordNumberToInt(lastChar) - 1;
+	c.exitY = charToInt(lastChar) - 1;
 
 	int direction = Piece::getPawnMoveDirection(playerTurnColor);
 
@@ -85,7 +85,7 @@ Coords NotationToCoords::toCoords(const std::unique_ptr<Piece> board[8][8], cons
 		// R2d4, N4xg3, R1a6... 
 		else
 		{
-			int row = coordNumberToInt(notationString[1]) - 1;
+			int row = charToInt(notationString[1]) - 1;
 			c.startY = row;
 
 			for (int x = 0; x < 8; x++)
@@ -129,9 +129,9 @@ int NotationToCoords::colCharToInt(char c)
 	return col[c];
 }
 
-std::string NotationToCoords::cutStringInHalf(std::string& notationString, bool isXinString) { return notationString.substr(0, notationString.length() - (2 + isXinString)); }
+std::string NotationToCoords::cutStringInHalf(std::string& notationString, bool isXinString) { int rmvX = 2 + (int) isXinString; return notationString.substr(0, notationString.length() - rmvX); }
 
-int NotationToCoords::coordNumberToInt(char c) { return c - '0'; }
+int NotationToCoords::charToInt(char c) { return c - '0'; }
 
 bool NotationToCoords::isInvalidColCoordinate(char c) { return colCharToInt(c) == 0; }
 

@@ -2,7 +2,6 @@
 
 Board::Board()
 {
-	setupDefaultBoard();
 }
 
 Board::Board(const Board& brd)
@@ -240,7 +239,7 @@ void Board::removePawnsTakenEnPassant(const Coords& c)
 	}
 }
 
-void Board::setupDefaultBoard()
+void Board::newGame()
 {
 	board[0][0] = std::make_unique<Rook>(Piece::Color::WHITE);
 	board[0][1] = std::make_unique<Knight>(Piece::Color::WHITE);

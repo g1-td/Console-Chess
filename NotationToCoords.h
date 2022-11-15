@@ -15,7 +15,7 @@ class NotationToCoords
 	private:
 	static std::string cutStringInHalf(std::string& notationString, bool isXinString);
 	static int colCharToInt(char c);
-	static int coordNumberToInt(char c);
+	static int charToInt(char c);
 	static bool isInvalidColCoordinate(char c);
 	static bool notationStringInvalidLength(const std::string& notationString);
 	static bool isXinNotationString(const std::string& notationString);
@@ -29,4 +29,6 @@ class NotationToCoords
 	static Coords queenSideCastle(const Piece::Color playerTurnColor);
 	static Coords castle(const Piece::Color playerTurnColor, const std::string notationString);
 	static Coords pawnAdvance(const std::unique_ptr<Piece> board[8][8], Coords c, int direction);
+
+	friend class FEN;
 };

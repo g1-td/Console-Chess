@@ -30,7 +30,7 @@ class Board
 	void updateRepetitionState(const Coords& c);
 	void removePawnsTakenEnPassant(const Coords& c);
 	void expireEnPassantFlags();
-	void setupDefaultBoard();
+	void newGame();
 	void setFlags(const Coords& c);
 	void setFlagTrue(const Coords& c);
 	void movePiece(const Coords& c);
@@ -56,6 +56,6 @@ class Board
 	Piece::Color playerTurnColor;
 	int fiftyMoveCounter = 0;
 	int threeFoldCounter = 0;
-	int turnCounter = 0;
+	int turnCounter = 1;
 };
 

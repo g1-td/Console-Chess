@@ -4,10 +4,12 @@
 #include <vector>
 #include "Board.h"
 #include "NotationToCoords.h"
+#include "FEN.h"
 class ChessGame
 {
 	public:
 	ChessGame();
+	ChessGame(const std::string& fen);
 	void start();
 	
 

@@ -11,23 +11,25 @@ class ChessGame
 	ChessGame();
 	ChessGame(const std::string& fen);
 	void start();
-	
+	void newGame();
+
 
 	private:
-	void turn();
+	bool makeMove(const Coords& c);
 	void nextTurn();
 	bool gameOver() const;
-	bool inputHasCommands(std::string userInput); // REDO THIS 
-	static std::string getParsedUserInput();
+	bool hasCommands(std::string userInput);
+	Coords getUserInput();
+	Coords InputHasCommandsCode();
 
 	// Visual 
 	void draw() const;
 	bool callDrawToggle();
-	void callDraw() const;
+	void visualize() const;
 	bool CHECKMATE() const;
 	bool STALEMATE() const;
 	static void help();
-	static void invalidMove();
+	static bool invalidMove();
 
 	static void drawLineA();
 	static void drawFooter();

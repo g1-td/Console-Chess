@@ -9,8 +9,11 @@ ChessGame::ChessGame()
 
 ChessGame::ChessGame(const std::string& fen)
 {
-	if (FEN::isFenValid(fen)) 
-		brd = FEN::toPosition(fen);
+	if (FEN::isFenValid(fen))
+		brd = std::make_unique<Board>(FEN::toPosition(fen));
+
+	else brd->newGame();
+
 	start();
 }
 
@@ -18,13 +21,23 @@ void ChessGame::start()
 {
 	while (!gameOver())
 	{
-		callDraw();
-		turn();
-		nextTurn();
+		visualize();
+
+		auto c = getUserInput();
+
+		makeMove(c);
 	}
+	system("break");
 }
 
-void ChessGame::turn()
+void ChessGame::newGame()
+{
+	brd.release();
+	brd = std::make_unique<Board>();
+	brd->newGame();
+}
+
+bool ChessGame::makeMove(const Coords& c)
 {
 	auto& board = brd->board;
 	auto& turn = brd->playerTurnColor;
@@ -32,27 +45,18 @@ void ChessGame::turn()
 
 	brd->expireEnPassantFlags();
 
-	while (true)
+	if (!brd->isMoveLegal(c))
 	{
-		std::cout << "\n\n>> ";
-		std::string userInput = getParsedUserInput();
-
-		if (!inputHasCommands(userInput))
-		{
-			Coords c = NotationToCoords::toCoords(board, turn, userInput);
-
-			if (brd->isMoveLegal(c))
-			{
-				brd->setFlags(c);
-				brd->updateRepetitionState(c);
-				brd->movePiece(c);
-				
-				++turnCounter;
-				break;
-			}
-			else invalidMove();
-		}
+		return Coords::cmpCoords(c, InputHasCommandsCode()) ? false : invalidMove();
 	}
+
+	brd->setFlags(c);
+	brd->updateRepetitionState(c);
+	brd->movePiece(c);
+
+	++turnCounter;
+	nextTurn();
+	return true;
 }
 
 void ChessGame::nextTurn()
@@ -71,51 +75,81 @@ bool ChessGame::gameOver() const
 	else return false;
 }
 
-std::string ChessGame::getParsedUserInput()
+Coords ChessGame::getUserInput()
 {
+	std::cout << "\n>> ";
 	std::string userInput;
-	std::cin >> userInput;
+	std::getline(std::cin, userInput);
 
-	return NotationToCoords::stringToUpper(userInput);
+	if (hasCommands(userInput)) // returns bool ~~AND~~ executes commands
+		return InputHasCommandsCode();
+
+	else
+		return NotationToCoords::toCoords(brd->board, brd->playerTurnColor, userInput);
 }
-bool ChessGame::inputHasCommands(std::string userInput)
+
+Coords ChessGame::InputHasCommandsCode()
 {
-	if (userInput == "HELP")
+	return Coords{ 1,1,1,1 };
+}
+
+bool ChessGame::hasCommands(std::string str)
+{
+	if (FEN::isFenValid(str))
 	{
-		system("cls");
+		brd = std::make_unique<Board>(FEN::toPosition(str));
+		return true;
+	}
+
+	NotationToCoords::stringToUpper(str);
+
+	if (str == "HELP" || str == "?")
+	{
+		// system("cls");
 		help();
 		return true;
 	}
-	else if (userInput == "DRAW")
+	else if (str == "DRAW")
 	{
-		system("cls");
+		// system("cls");
 		draw();
 		return true;
 	}
-	else if (userInput == "AUTO")
+	else if (str == "AUTO")
 	{
 		system("cls");
+
+		auto status = autoDraw ? "Enabled" : "Disabled";
+		std::cout << "AutoDraw has been " << status;
+
 		callDrawToggle();
 		return true;
 	}
-	return false;
+	else if (str == "RESET" || str == "RESTART" || str == "-r")
+	{
+		newGame();
+		return true;
+	}
+	else if (str == "CLEAR" || str == "CLS")
+	{
+		system("cls");
+		return true;
+	}
+	else if (str == "FEN")
+	{
+		std::cout << "\n\n\n\n" << FEN::toString(brd) << "\n\n";
+		return true;
+	}
+
+	else return false;
 }
 
 bool ChessGame::callDrawToggle() { return (autoDraw = !autoDraw); }
 
-void ChessGame::invalidMove()
+bool ChessGame::invalidMove()
 {
-	/*
-		TODO :
-
-		Add a reason why the move was invalid
-		such as "No BISHOP found on e2"
-
-		This is kind of useless and work for the sake of work,
-		but it might be kinda cool for somebody who can't play chess
-		so consider adding it after everything else is finished!
-	*/
-	std::cout << "Move is Invalid.\n\n";
+	std::cout << "\n\n     Move Invalid.\n";
+	return false;
 }
 
 bool ChessGame::CHECKMATE() const
@@ -125,7 +159,7 @@ bool ChessGame::CHECKMATE() const
 	std::string winner;
 	(bool)brd->ReturnAlternateTurn() ? winner = "BLACK" : winner = "WHITE";
 
-	std::cout << winner << " WON BY CHECKMATE!\n";
+	std::cout << "\nCHECKMATE, " << winner << " IS VICTORIOUS!\n";
 
 	return true;
 }
@@ -134,12 +168,12 @@ bool ChessGame::STALEMATE() const
 {
 	draw();
 	std::cout << "STALEMATE!";
-	
+
 	return true;
 }
 void ChessGame::help()
 {
-	std::cout << "Enter moves using Standard Chess notation\n";
+	std::cout << "\n\nEnter moves using Standard Chess notation\n";
 	std::cout << "Examples: \"e4\", \"exd5\", \"Neg3\"\n\n";
 	std::cout << "COMMANDS : \n";
 	std::cout << "\"draw\" - Draws the current board position\n";
@@ -193,7 +227,7 @@ void ChessGame::draw() const
 	}
 	drawFooter();
 }
-void ChessGame::callDraw() const { autoDraw ? draw() : void(); }
+void ChessGame::visualize() const { autoDraw ? draw() : void(); }
 
 void ChessGame::drawLineA()
 {

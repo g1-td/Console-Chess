@@ -53,9 +53,8 @@ class Board
 
 	std::unique_ptr<Piece> board[8][8];
 	std::vector<posInstance> threeFoldCoordsArray;
-	Piece::Color playerTurnColor;
+	Piece::Color playerTurnColor = Piece::Color::WHITE;
 	int fiftyMoveCounter = 0;
 	int threeFoldCounter = 0;
 	int turnCounter = 1;
 };
-

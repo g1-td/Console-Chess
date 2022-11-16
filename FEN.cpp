@@ -25,28 +25,28 @@ std::string FEN::toString(const std::unique_ptr<Board>& brd)
 	return fen;
 }
 
-std::unique_ptr<Board> FEN::toPosition(std::string fen)
+Board FEN::toPosition(std::string fen)
 {
 	/* ASSUME VALID FEN */
-	std::unique_ptr<Board> brd = std::make_unique<Board>();
+	Board brd;
 
 	auto lfen = cutTillSpace(fen);
-	strToBoard(lfen, brd->board);
+	strToBoard(lfen, brd.board);
 
 	lfen = cutTillSpace(fen);
-	brd->playerTurnColor = charToColor(lfen[0]);
+	brd.playerTurnColor = charToColor(lfen[0]);
 
 	lfen = cutTillSpace(fen);
-	setCastleFlags(brd->board, lfen);
+	setCastleFlags(brd.board, lfen);
 
 	lfen = cutTillSpace(fen);
-	setEnPassantFlag(brd->board, lfen);
+	setEnPassantFlag(brd.board, lfen);
 
 	lfen = cutTillSpace(fen);
-	brd->fiftyMoveCounter = NotationToCoords::charToInt(lfen[0]);
+	brd.fiftyMoveCounter = stoi(lfen);
 
 	lfen = cutTillSpace(fen);
-	brd->turnCounter = NotationToCoords::charToInt(lfen[0]);
+	brd.turnCounter = stoi(lfen);
 
 	return brd;
 }
@@ -54,7 +54,7 @@ std::unique_ptr<Board> FEN::toPosition(std::string fen)
 bool FEN::isFenValid(std::string fen)
 {
 	// TODO
-	return true;
+	return fen.length() >= 28 ? true : false;
 }
 
 std::string FEN::boardToStr(const std::unique_ptr<Piece> board[8][8])
@@ -96,11 +96,19 @@ std::string FEN::boardToStr(const std::unique_ptr<Piece> board[8][8])
 std::string FEN::hasMovedKingRook(const std::unique_ptr<Piece> board[8][8])
 {
 	std::string moved;
-	if (board[0][7]->isSquareOccupied() && !board[0][7]->getMovedFlag()) { moved += "K"; }
-	if (board[0][0]->isSquareOccupied() && !board[0][0]->getMovedFlag()) { moved += "Q"; }
-	if (board[7][7]->isSquareOccupied() && !board[7][7]->getMovedFlag()) { moved += "k"; }
-	if (board[0][7]->isSquareOccupied() && !board[0][7]->getMovedFlag()) { moved += "q"; }
+	bool wKingMoved = board[0][4]->getMovedFlag();
+	bool bKingMoved = board[7][4]->getMovedFlag();
 
+	if (!wKingMoved)
+	{
+		if (board[0][7]->isSquareOccupied() && !board[0][7]->getMovedFlag()) { moved += "K"; }
+		if (board[0][0]->isSquareOccupied() && !board[0][0]->getMovedFlag()) { moved += "Q"; }
+	}
+	if (!bKingMoved)
+	{
+		if (board[7][7]->isSquareOccupied() && !board[7][7]->getMovedFlag()) { moved += "k"; }
+		if (board[0][7]->isSquareOccupied() && !board[7][0]->getMovedFlag()) { moved += "q"; }
+	}
 	if (moved.length() == 0) { moved += "-"; }
 
 	return moved;
@@ -125,33 +133,33 @@ std::string FEN::enPassantCapture(const std::unique_ptr<Piece> board[8][8], cons
 
 				c.startX = x;
 				c.startY = y;
-				c.exitY += dir;
+				c.exitY = c.startY + dir;
 
-				std::unique_ptr<Board> ng = std::make_unique<Board>();
-				Board::copyBoard(board, ng->board);
-				ng->playerTurnColor = color;
+				Board ng;
+				Board::copyBoard(board, ng.board);
+				ng.playerTurnColor = color;
 
 				if (x - 1 > 0)
 				{
-					c.exitX += x - 1;
+					c.exitX = x - 1;
 
-					if (!ng->board[c.exitY][c.exitX]->isSquareOccupied() &&
-						ng->isMoveLegal(c))
+					if (!ng.board[c.exitY][c.exitX]->isSquareOccupied() &&
+						ng.isMoveLegal(c))
 					{
-						ep += std::to_string((char)(c.exitX + 65));
-						ep += std::to_string(c.exitY);
+						ep += (char)(c.exitX + 97);
+						ep += std::to_string(c.exitY + 1);
 					}
 
 				}
 				if (x + 1 < 7)
 				{
-					c.exitX += x + 1;
+					c.exitX = x + 1;
 
-					if (!ng->board[c.exitY][c.exitX]->isSquareOccupied() &&
-						ng->isMoveLegal(c))
+					if (!ng.board[c.exitY][c.exitX]->isSquareOccupied() &&
+						ng.isMoveLegal(c))
 					{
-						ep += std::to_string((char)(c.exitX + 65));
-						ep += std::to_string(c.exitY);
+						ep += (char)(c.exitX + 97);
+						ep += std::to_string(c.exitY + 1);
 					}
 				}
 			}
@@ -169,10 +177,11 @@ void FEN::setEnPassantFlag(const std::unique_ptr<Piece> board[8][8], const std::
 {
 	if (str[0] != '-')
 	{
-		int x = NotationToCoords::colCharToInt(str[0]) - 1;
+		char col = toupper(str[0]);
+		int x = NotationToCoords::colCharToInt(col) - 1;
 		int y = NotationToCoords::charToInt(str[1]) - 1;
 
-		y == 3 ? y += 1 : y += -1;
+		y == 2 ? y += 1 : y += -1;
 
 		board[y][x]->setMovedFlag(true);
 	}
@@ -180,19 +189,19 @@ void FEN::setEnPassantFlag(const std::unique_ptr<Piece> board[8][8], const std::
 
 void FEN::setCastleFlags(const std::unique_ptr<Piece> board[8][8], const std::string& str)
 {
-	for (int i = 0; i < str.length(); i++)
+	if (!str[0] == '-')
 	{
-		     if (str[i] == 'K') board[0][7]->setMovedFlag(true);
-		else if (str[i] == 'Q') board[0][0]->setMovedFlag(true);
-		else if (str[i] == 'k') board[7][7]->setMovedFlag(true);
-		else if (str[i] == 'q') board[7][0]->setMovedFlag(true);
+		if (str.find('K') == std::string::npos) board[0][7]->setMovedFlag(true);
+		if (str.find('Q') == std::string::npos) board[0][0]->setMovedFlag(true);
+		if (str.find('k') == std::string::npos) board[7][7]->setMovedFlag(true);
+		if (str.find('q') == std::string::npos) board[7][0]->setMovedFlag(true);
 	}
 }
 
 Piece::Color FEN::charToColor(const char& c)
 {
 	if (c == 'w') return Piece::Color::WHITE;
-	if (c == 'b') return Piece::Color::BLACK;
+	else return Piece::Color::BLACK;
 }
 
 void FEN::strToBoard(const std::string& str, std::unique_ptr<Piece> board[8][8])

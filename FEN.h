@@ -7,7 +7,7 @@ class FEN
 {
 	public:
 	static std::string toString(const std::unique_ptr<Board>& brd);
-	static std::unique_ptr<Board> toPosition(std::string fen);
+	static Board toPosition(std::string fen);
 	static bool isFenValid(std::string fen);
 
 	private:
@@ -22,4 +22,3 @@ class FEN
 	static std::string cutTillSpace(std::string& str);
 	static Piece::Color charToColor(const char& c);
 };
-

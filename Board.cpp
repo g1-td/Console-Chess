@@ -15,26 +15,24 @@ Board::Board(const Board& brd)
 
 bool Board::isKingInCheck() const
 {
-	Coords c;
-	Coords king = findKing();
-
-	c.exitX = king.startX;
-	c.exitY = king.startY;
+	Coords toKing = findKing();
 
 	auto enemyTurnColor = ReturnAlternateTurn();
 
+	Board boardCopy(*this);
+	boardCopy.playerTurnColor = enemyTurnColor;
 	for (int y = 0; y < 8; ++y)
 	{
 		for (int x = 0; x < 8; ++x)
 		{
-			c.startX = x;
-			c.startY = y;
+			toKing.startX = x;
+			toKing.startY = y;
 
 			if (board[y][x]->isSquareOccupied() &&
-				board[y][x]->isPieceColor(enemyTurnColor) &&
-				isMoveLegal(c))
+				board[y][x]->isPieceColor(enemyTurnColor))
 			{
-				return true;
+				if (boardCopy.isMoveLegal(toKing))
+					return true;
 			}
 		}
 	}
@@ -62,7 +60,8 @@ bool Board::playerHasLegalMoves() const
 						c.exitY = yd;
 						c.exitX = xd;
 
-						if (isMoveLegal(c)) return true;
+						if (isMoveLegal(c))
+							return true;
 					}
 				}
 			}
@@ -91,10 +90,9 @@ bool Board::isMoveLegal(const Coords& c) const
 					return true;
 				}
 
-				Board boardCopy;
-				copyBoard(board, boardCopy.board);
+				Board boardCopy(*this);
 				boardCopy.movePiece(c);
-				
+
 				return !boardCopy.isKingInCheck();
 			}
 		}
@@ -150,7 +148,7 @@ bool Board::threeFold_check() const
 
 bool Board::isBeginningOfTurn() const
 {
-	// Turn is finished after BOTH sides 
+	// Full turn is finished after BOTH sides finish their turn
 	return turnCounter % 2 == 0;
 }
 
@@ -266,8 +264,6 @@ void Board::newGame()
 	{
 		board[6][i] = std::make_unique<Pawn>(Piece::Color::BLACK);
 	}
-
-	playerTurnColor = Piece::Color::WHITE;
 }
 
 void Board::setFlags(const Coords& c)
@@ -287,7 +283,7 @@ void Board::movePiece(const Coords& c)
 {
 	board[c.exitY][c.exitX] = std::move(board[c.startY][c.startX]);
 
-	if (board[c.exitY][c.exitX]->isPieceType(Piece::Type::KING))
+	if (board[c.exitY][c.exitX]->isPieceType(Piece::Type::KING) && !isKingInCheck())
 	{
 		int direction = Piece::getExitToStartDirection(c.startX, c.exitX);
 		int rookXCoords = direction == 1 ? 0 : 7;
@@ -325,12 +321,11 @@ Piece::Color Board::alternateTurn()
 
 Coords Board::findKing() const
 {
-	// Only startX & Y are used
 	Coords c;
 
-	// Initialize to impossible Coords
-	// if returned king is not found
-	c.startX = 10;
+	// Initialize to Impossible Coords
+	//	incase king is not found.
+	c.exitX = 10;
 
 	for (int y = 0; y < 8; ++y)
 	{
@@ -340,8 +335,8 @@ Coords Board::findKing() const
 				board[y][x]->isPieceColor(playerTurnColor) &&
 				board[y][x]->isPieceType(Piece::Type::KING))
 			{
-				c.startY = y;
-				c.startX = x;
+				c.exitY = y;
+				c.exitX = x;
 
 				return c;
 			}

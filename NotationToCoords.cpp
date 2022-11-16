@@ -129,7 +129,7 @@ int NotationToCoords::colCharToInt(char c)
 	return col[c];
 }
 
-std::string NotationToCoords::cutStringInHalf(std::string& notationString, bool isXinString) { int rmvX = 2 + (int) isXinString; return notationString.substr(0, notationString.length() - rmvX); }
+std::string NotationToCoords::cutStringInHalf(std::string& notationString, bool isXinString) { int rmvX = 2 + (int)isXinString; return notationString.substr(0, notationString.length() - rmvX); }
 
 int NotationToCoords::charToInt(char c) { return c - '0'; }
 
@@ -198,7 +198,7 @@ Coords NotationToCoords::pawnAdvance(const std::unique_ptr<Piece> board[8][8], C
 		int y = c.exitY - (direction * i);
 		int x = c.exitX;
 
-		if (y > 0 && 
+		if (y > 0 &&
 			board[y][x]->isSquareOccupied() &&
 			board[y][x]->isPieceType(Piece::Type::PAWN))
 		{

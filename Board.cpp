@@ -6,6 +6,14 @@ Board::Board()
 
 Board::Board(const Board& brd)
 {
+	/* 
+	*	Warning :
+	*	
+	*	Timers and Threefold array are
+	*	purposefully left out because 
+	*	they are not used.
+	*/
+
 	copyBoard(brd.board, board);
 	playerTurnColor = brd.playerTurnColor;
 	fiftyMoveCounter = brd.fiftyMoveCounter;
@@ -264,6 +272,8 @@ void Board::newGame()
 	{
 		board[6][i] = std::make_unique<Pawn>(Piece::Color::BLACK);
 	}
+
+	isTimed = false;
 }
 
 void Board::setFlags(const Coords& c)
@@ -324,7 +334,7 @@ Coords Board::findKing() const
 	Coords c;
 
 	// Initialize to Impossible Coords
-	//	incase king is not found.
+	//	in case king is not found.
 	c.exitX = 10;
 
 	for (int y = 0; y < 8; ++y)

@@ -2,6 +2,7 @@
 #include <iostream>
 #include <memory>
 #include <vector>
+#include "Timer.h"
 #include "Piece.h"
 #include "Rook.h"
 #include "Knight.h"
@@ -57,4 +58,9 @@ class Board
 	int fiftyMoveCounter = 0;
 	int threeFoldCounter = 0;
 	int turnCounter = 1;
+
+	Timer whiteTimer;
+	Timer blackTimer;
+	bool timeOut = false;
+	bool isTimed = false;
 };

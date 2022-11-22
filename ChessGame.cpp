@@ -2,19 +2,36 @@
 
 ChessGame::ChessGame()
 {
-	brd = std::make_unique<Board>();
-	brd->newGame();
+	newGame();
 	start();
 }
 
-ChessGame::ChessGame(const std::string& fen)
+ChessGame::ChessGame(const std::string& _fen)
 {
-	if (FEN::isFenValid(fen))
-		brd = std::make_unique<Board>(FEN::toPosition(fen));
+	newGame(_fen);
+	start();
+}
 
-	else brd->newGame();
+ChessGame::ChessGame(int _min, int _sec, int _inc)
+{
+	newGame();
+	setTimers(_min, _sec, _inc);
+
+	std::thread t1(&ChessGame::timerController, this);
 
 	start();
+	t1.join();
+}
+
+ChessGame::ChessGame(const std::string& _fen, int _min, int _sec, int _inc)
+{
+	newGame(_fen);
+	setTimers(_min, _sec, _inc);
+
+	std::thread t1(&ChessGame::timerController, this);
+
+	start();
+	t1.join();
 }
 
 void ChessGame::start()
@@ -23,21 +40,25 @@ void ChessGame::start()
 	{
 		visualize();
 
-		auto c = getUserInput();
-
-		makeMove(c);
+		makeMove(getUserInput());
 	}
-	system("break");
 }
 
 void ChessGame::newGame()
 {
-	brd.release();
 	brd = std::make_unique<Board>();
 	brd->newGame();
 }
 
-bool ChessGame::makeMove(const Coords& c)
+void ChessGame::newGame(const std::string& _fen)
+{
+	if (FEN::isFenValid(_fen))
+		brd = std::make_unique<Board>(FEN::toPosition(_fen));
+
+	else brd->newGame();
+}
+
+bool ChessGame::makeMove(const Coords& _c)
 {
 	auto& board = brd->board;
 	auto& turn = brd->playerTurnColor;
@@ -45,17 +66,21 @@ bool ChessGame::makeMove(const Coords& c)
 
 	brd->expireEnPassantFlags();
 
-	if (!brd->isMoveLegal(c))
+	if (!brd->isMoveLegal(_c))
 	{
-		return Coords::cmpCoords(c, InputHasCommandsCode()) ? false : invalidMove();
+		// This prevents invalid move from being printed
+		// when the user is using commands
+		return Coords::cmpCoords(_c, InputHasCommandsCode()) ? false : invalidMove();
 	}
 
-	brd->setFlags(c);
-	brd->updateRepetitionState(c);
-	brd->movePiece(c);
+	brd->setFlags(_c);
+	brd->updateRepetitionState(_c);
+	brd->movePiece(_c);
 
 	++turnCounter;
 	nextTurn();
+	firstMove = true;
+
 	return true;
 }
 
@@ -72,20 +97,22 @@ bool ChessGame::gameOver() const
 	else if (brd->fiftyMove_check() || brd->threeFold_check())
 		return STALEMATE();
 
+	else if (brd->isTimed && brd->timeOut) return TIMEOUT();
+
 	else return false;
 }
 
 Coords ChessGame::getUserInput()
 {
 	std::cout << "\n>> ";
+
 	std::string userInput;
 	std::getline(std::cin, userInput);
 
 	if (hasCommands(userInput)) // returns bool ~~AND~~ executes commands
 		return InputHasCommandsCode();
 
-	else
-		return NotationToCoords::toCoords(brd->board, brd->playerTurnColor, userInput);
+	else return NotationToCoords::toCoords(brd->board, brd->playerTurnColor, userInput);
 }
 
 Coords ChessGame::InputHasCommandsCode()
@@ -93,8 +120,48 @@ Coords ChessGame::InputHasCommandsCode()
 	return Coords{ 1,1,1,1 };
 }
 
+void ChessGame::setTimers(int _min, int _sec, int _inc)
+{
+	brd->whiteTimer = Timer(_min, _sec, _inc);
+	brd->blackTimer = Timer(_min, _sec, _inc);
+	brd->isTimed = true;
+}
+
+void ChessGame::timerController()
+{
+	Timer* prevTimer = currentPlayersTimer();
+
+	while (!firstMove) { std::this_thread::sleep_for(std::chrono::milliseconds(100)); }
+
+	while (!currentPlayersTimer()->isZero())
+	{
+		currentPlayersTimer()->countDown();
+
+		if (prevTimer != currentPlayersTimer())
+		{
+			prevTimer->addIncrement();
+			prevTimer = currentPlayersTimer();
+		}
+	}
+	brd->timeOut = true;
+}
+
+Timer* ChessGame::currentPlayersTimer()
+{
+	return brd->playerTurnColor == Piece::Color::WHITE ?
+		&brd->whiteTimer : &brd->blackTimer;
+}
+
 bool ChessGame::hasCommands(std::string str)
 {
+	/*
+	
+		TODO: 
+		Make this into a menu system with options instead
+
+	*/
+
+
 	if (FEN::isFenValid(str))
 	{
 		brd = std::make_unique<Board>(FEN::toPosition(str));
@@ -144,7 +211,7 @@ bool ChessGame::hasCommands(std::string str)
 	else return false;
 }
 
-bool ChessGame::callDrawToggle() { return (autoDraw = !autoDraw); }
+bool ChessGame::callDrawToggle() { return autoDraw = !autoDraw; }
 
 bool ChessGame::invalidMove()
 {
@@ -171,6 +238,18 @@ bool ChessGame::STALEMATE() const
 
 	return true;
 }
+
+bool ChessGame::TIMEOUT() const
+{
+	draw();
+	const char* winner;
+	(bool)brd->ReturnAlternateTurn() ? winner = "white" : winner = "black";
+
+	std::cout << "\nToo slow, " << winner << " won on time!\n";
+
+	return true;
+}
+
 void ChessGame::help()
 {
 	std::cout << "\n\nEnter moves using Standard Chess notation\n";
@@ -226,7 +305,10 @@ void ChessGame::draw() const
 		else drawLineA();
 	}
 	drawFooter();
+
+	if (brd->isTimed) drawRemainingTime();
 }
+
 void ChessGame::visualize() const { autoDraw ? draw() : void(); }
 
 void ChessGame::drawLineA()
@@ -242,4 +324,20 @@ void ChessGame::drawFooter()
 bool ChessGame::isNotFillerSpace(int number)
 {
 	return !(number % 2) && number != 0;
+}
+
+void ChessGame::drawRemainingTime() const
+{
+	// EXAMPLE : 2min 20sec
+
+	// 2 min
+	int whiteMinutes = (brd->whiteTimer.getTimeMillis() / 1000) / 60;
+	int blackMinutes = (brd->blackTimer.getTimeMillis() / 1000) / 60;
+
+	// 20 sec 
+	int whiteSeconds = (brd->whiteTimer.getTimeMillis() / 1000) % 60;
+	int blackSeconds = (brd->blackTimer.getTimeMillis() / 1000) % 60;
+
+	std::cout << "White : " << whiteMinutes << "min : " << whiteSeconds << "sec" << std::endl;
+	std::cout << "Black : " << blackMinutes << "min : " << blackSeconds << "sec" << std::endl;
 }
